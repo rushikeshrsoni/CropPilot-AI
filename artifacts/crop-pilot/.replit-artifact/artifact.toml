@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "CropPilot AI"
+description = "A mobile-first crop advisory app for Indian farmers, with AI-powered disease diagnosis, farm and soil profiles, personalized recommendations, bilingual agronomist chat, and a private history."
+version = "1.0.0"
+id = "artifacts/crop-pilot"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 26076
+
+[services.development]
+run = "pnpm --filter @workspace/crop-pilot run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/crop-pilot", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/crop-pilot/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "26076"
+BASE_PATH = "/"
