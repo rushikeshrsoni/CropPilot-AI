@@ -3,20 +3,26 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: CropPilot AI farmer advisory API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: auth
+  - name: profile
+  - name: farms
+  - name: diagnoses
+  - name: advice
+  - name: chat
+  - name: dashboard
+  - name: history
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +30,689 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a farmer account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Sign in
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Sign out
+      responses:
+        "204":
+          description: Signed out
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [auth]
+      summary: Get the signed-in user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /profile:
+    patch:
+      operationId: updateProfile
+      tags: [profile]
+      summary: Update profile and language preference
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /farms:
+    get:
+      operationId: listFarms
+      tags: [farms]
+      summary: List the farmer's farms
+      responses:
+        "200":
+          description: Farm list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Farm"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createFarm
+      tags: [farms]
+      summary: Create a farm profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FarmInput"
+      responses:
+        "201":
+          description: Created farm
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Farm"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /farms/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      operationId: getFarm
+      tags: [farms]
+      summary: Get a farm
+      responses:
+        "200":
+          description: Farm details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Farm"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateFarm
+      tags: [farms]
+      summary: Update a farm
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FarmUpdate"
+      responses:
+        "200":
+          description: Updated farm
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Farm"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteFarm
+      tags: [farms]
+      summary: Delete a farm
+      responses:
+        "204":
+          description: Deleted farm
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /diagnoses:
+    get:
+      operationId: listDiagnoses
+      tags: [diagnoses]
+      summary: List saved diagnoses
+      responses:
+        "200":
+          description: Diagnosis list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Diagnosis"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createDiagnosis
+      tags: [diagnoses]
+      summary: Analyze crop symptoms or an image
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiagnosisInput"
+      responses:
+        "201":
+          description: Diagnosis saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Diagnosis"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /diagnoses/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      operationId: getDiagnosis
+      tags: [diagnoses]
+      summary: Get a saved diagnosis
+      responses:
+        "200":
+          description: Diagnosis details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Diagnosis"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /advice:
+    get:
+      operationId: listAdvice
+      tags: [advice]
+      summary: List saved advice reports
+      responses:
+        "200":
+          description: Advice list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdviceReport"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createAdvice
+      tags: [advice]
+      summary: Generate personalized farm advice
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdviceInput"
+      responses:
+        "201":
+          description: Advice report saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdviceReport"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /advice/{id}:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      operationId: getAdvice
+      tags: [advice]
+      summary: Get a saved advice report
+      responses:
+        "200":
+          description: Advice details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdviceReport"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /chat/sessions:
+    get:
+      operationId: listChatSessions
+      tags: [chat]
+      summary: List chat sessions
+      responses:
+        "200":
+          description: Chat sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatSession"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      operationId: createChatSession
+      tags: [chat]
+      summary: Start a chat session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatSessionInput"
+      responses:
+        "201":
+          description: New session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatSession"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /chat/sessions/{id}/messages:
+    parameters:
+      - $ref: "#/components/parameters/Id"
+    get:
+      operationId: listChatMessages
+      tags: [chat]
+      summary: Get messages in a session
+      responses:
+        "200":
+          description: Chat messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ChatMessage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    post:
+      operationId: sendChatMessage
+      tags: [chat]
+      summary: Send a message to the agronomist
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatMessageInput"
+      responses:
+        "201":
+          description: Saved assistant reply
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatMessage"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /dashboard:
+    get:
+      operationId: getDashboard
+      tags: [dashboard]
+      summary: Get dashboard counts and recent activity
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /history:
+    get:
+      operationId: listHistory
+      tags: [history]
+      summary: List unified saved activity
+      parameters:
+        - name: kind
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [diagnosis, advice, chat]
+      responses:
+        "200":
+          description: Unified history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistoryItem"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: Invalid input
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    RateLimited:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ServiceUnavailable:
+      description: AI service is unavailable
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
   schemas:
     HealthStatus:
       type: object
       properties:
         status:
           type: string
-      required:
-        - status
-
+      required: [status]
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    User:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        fullName: { type: string }
+        phone: { type: ["string", "null"] }
+        preferredLanguage: { type: string, enum: [en, hi] }
+        regionState: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+      required: [id, email, fullName, phone, preferredLanguage, regionState, createdAt]
+    RegisterInput:
+      type: object
+      properties:
+        fullName: { type: string, minLength: 2, maxLength: 120 }
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, minLength: 10, maxLength: 128 }
+        phone: { type: ["string", "null"], maxLength: 32 }
+        preferredLanguage: { type: string, enum: [en, hi] }
+        regionState: { type: ["string", "null"], maxLength: 100 }
+      required: [fullName, email, password, preferredLanguage]
+    LoginInput:
+      type: object
+      properties:
+        email: { type: string, format: email, maxLength: 254 }
+        password: { type: string, minLength: 1, maxLength: 128 }
+      required: [email, password]
+    ProfileUpdate:
+      type: object
+      properties:
+        fullName: { type: string, minLength: 2, maxLength: 120 }
+        phone: { type: ["string", "null"], maxLength: 32 }
+        preferredLanguage: { type: string, enum: [en, hi] }
+        regionState: { type: ["string", "null"], maxLength: 100 }
+    Farm:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        state: { type: ["string", "null"] }
+        district: { type: ["string", "null"] }
+        soilType: { type: ["string", "null"] }
+        soilPh: { type: ["number", "null"] }
+        organicMatter: { type: ["string", "null"] }
+        irrigationMethod: { type: ["string", "null"] }
+        farmSizeAcres: { type: ["number", "null"] }
+        primaryCrops:
+          type: array
+          items: { type: string }
+        notes: { type: ["string", "null"] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+      required: [id, name, state, district, soilType, soilPh, organicMatter, irrigationMethod, farmSizeAcres, primaryCrops, notes, createdAt, updatedAt]
+    FarmInput:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        state: { type: ["string", "null"], maxLength: 100 }
+        district: { type: ["string", "null"], maxLength: 100 }
+        soilType: { type: ["string", "null"], maxLength: 100 }
+        soilPh: { type: ["number", "null"], minimum: 0, maximum: 14 }
+        organicMatter: { type: ["string", "null"], maxLength: 80 }
+        irrigationMethod: { type: ["string", "null"], maxLength: 100 }
+        farmSizeAcres: { type: ["number", "null"], minimum: 0 }
+        primaryCrops:
+          type: array
+          items: { type: string, maxLength: 80 }
+        notes: { type: ["string", "null"], maxLength: 4000 }
+      required: [name]
+    FarmUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 120 }
+        state: { type: ["string", "null"], maxLength: 100 }
+        district: { type: ["string", "null"], maxLength: 100 }
+        soilType: { type: ["string", "null"], maxLength: 100 }
+        soilPh: { type: ["number", "null"], minimum: 0, maximum: 14 }
+        organicMatter: { type: ["string", "null"], maxLength: 80 }
+        irrigationMethod: { type: ["string", "null"], maxLength: 100 }
+        farmSizeAcres: { type: ["number", "null"], minimum: 0 }
+        primaryCrops:
+          type: array
+          items: { type: string, maxLength: 80 }
+        notes: { type: ["string", "null"], maxLength: 4000 }
+    DiagnosisResult:
+      type: object
+      properties:
+        diseaseName: { type: string }
+        scientificName: { type: ["string", "null"] }
+        confidenceScore: { type: integer, minimum: 0, maximum: 100 }
+        severity: { type: string, enum: [low, medium, high, critical] }
+        matchedSymptoms: { type: array, items: { type: string } }
+        possibleCauses: { type: array, items: { type: string } }
+        immediateActions: { type: array, items: { type: string } }
+        treatmentOrganic: { type: array, items: { type: string } }
+        treatmentChemical: { type: array, items: { type: string } }
+        preventionTips: { type: array, items: { type: string } }
+        whenToSeekHelp: { type: string }
+        disclaimer: { type: string }
+      required: [diseaseName, scientificName, confidenceScore, severity, matchedSymptoms, possibleCauses, immediateActions, treatmentOrganic, treatmentChemical, preventionTips, whenToSeekHelp, disclaimer]
+    Diagnosis:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        farmId: { type: ["string", "null"], format: uuid }
+        farmName: { type: ["string", "null"] }
+        cropName: { type: string }
+        symptomsText: { type: ["string", "null"] }
+        result: { $ref: "#/components/schemas/DiagnosisResult" }
+        language: { type: string, enum: [en, hi] }
+        createdAt: { type: string, format: date-time }
+      required: [id, farmId, farmName, cropName, symptomsText, result, language, createdAt]
+    DiagnosisInput:
+      type: object
+      properties:
+        farmId: { type: ["string", "null"], format: uuid }
+        cropName: { type: string, minLength: 1, maxLength: 100 }
+        symptomsText: { type: ["string", "null"], maxLength: 4000 }
+        imageData: { type: string, maxLength: 11000000, description: Optional data URL for a JPEG, PNG, or WebP photo, analyzed immediately and not retained. }
+        growthStage: { type: ["string", "null"], maxLength: 100 }
+        noticedWhen: { type: ["string", "null"], maxLength: 100 }
+        notes: { type: ["string", "null"], maxLength: 2000 }
+        language: { type: string, enum: [en, hi] }
+      required: [cropName, language]
+    AdviceResult:
+      type: object
+      properties:
+        cropRecommendations: { type: array, items: { type: string } }
+        fertilizerPlan: { type: array, items: { type: string } }
+        irrigationPlan: { type: array, items: { type: string } }
+        soilActions: { type: array, items: { type: string } }
+        riskNotes: { type: array, items: { type: string } }
+        disclaimer: { type: string }
+      required: [cropRecommendations, fertilizerPlan, irrigationPlan, soilActions, riskNotes, disclaimer]
+    AdviceReport:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        farmId: { type: ["string", "null"], format: uuid }
+        farmName: { type: ["string", "null"] }
+        goal: { type: string, enum: [yield, cost, organic, drought] }
+        season: { type: string }
+        currentCrops: { type: ["string", "null"] }
+        specificQuestions: { type: ["string", "null"] }
+        result: { $ref: "#/components/schemas/AdviceResult" }
+        language: { type: string, enum: [en, hi] }
+        createdAt: { type: string, format: date-time }
+      required: [id, farmId, farmName, goal, season, currentCrops, specificQuestions, result, language, createdAt]
+    AdviceInput:
+      type: object
+      properties:
+        farmId: { type: string, format: uuid }
+        goal: { type: string, enum: [yield, cost, organic, drought] }
+        season: { type: string, minLength: 1, maxLength: 80 }
+        currentCrops: { type: ["string", "null"], maxLength: 1000 }
+        specificQuestions: { type: ["string", "null"], maxLength: 2000 }
+        language: { type: string, enum: [en, hi] }
+      required: [farmId, goal, season, language]
+    ChatSession:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string }
+        language: { type: string, enum: [en, hi] }
+        updatedAt: { type: string, format: date-time }
+        lastMessage: { type: ["string", "null"] }
+      required: [id, title, language, updatedAt, lastMessage]
+    ChatSessionInput:
+      type: object
+      properties:
+        title: { type: string, maxLength: 120 }
+        language: { type: string, enum: [en, hi] }
+      required: [language]
+    ChatMessage:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        sessionId: { type: string, format: uuid }
+        role: { type: string, enum: [user, assistant] }
+        content: { type: string }
+        createdAt: { type: string, format: date-time }
+      required: [id, sessionId, role, content, createdAt]
+    ChatMessageInput:
+      type: object
+      properties:
+        content: { type: string, minLength: 1, maxLength: 4000 }
+        useFarmContext: { type: boolean }
+      required: [content, useFarmContext]
+    HistoryItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        kind: { type: string, enum: [diagnosis, advice, chat] }
+        title: { type: string }
+        summary: { type: string }
+        createdAt: { type: string, format: date-time }
+        path: { type: string }
+      required: [id, kind, title, summary, createdAt, path]
+    DashboardSummary:
+      type: object
+      properties:
+        farmCount: { type: integer }
+        diagnosisCount: { type: integer }
+        adviceCount: { type: integer }
+        chatCount: { type: integer }
+        latestDiagnosis: { $ref: "#/components/schemas/Diagnosis" }
+        latestAdvice: { $ref: "#/components/schemas/AdviceReport" }
+        recentActivity:
+          type: array
+          items: { $ref: "#/components/schemas/HistoryItem" }
+      required: [farmCount, diagnosisCount, adviceCount, chatCount, recentActivity]

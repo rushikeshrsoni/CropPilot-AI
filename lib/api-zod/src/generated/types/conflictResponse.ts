@@ -5,7 +5,9 @@
  * CropPilot AI farmer advisory API
  * OpenAPI spec version: 0.1.0
  */
+import type { Error } from './error';
 
-export interface HealthStatus {
-  status: string;
-}
+/**
+ * Resource conflict
+ */
+export type ConflictResponse = Error;

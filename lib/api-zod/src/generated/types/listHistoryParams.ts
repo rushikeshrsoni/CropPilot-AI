@@ -5,7 +5,8 @@
  * CropPilot AI farmer advisory API
  * OpenAPI spec version: 0.1.0
  */
+import type { ListHistoryKind } from './listHistoryKind';
 
-export interface HealthStatus {
-  status: string;
-}
+export type ListHistoryParams = {
+kind?: ListHistoryKind;
+};
